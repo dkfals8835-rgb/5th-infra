@@ -1,0 +1,77 @@
+*** Docker Container ***
+- Docker Image를 실행한 인스턴스 : 실제 프로세스 동작 단위
+- 이미지는 불변, 컨테이너는 이미지 위에 쓰기 가능한 레이어를 추가하여 동작
+- 컨테이너 삭제 시 쓰기 레이어는 모두 소멸 -> 데이터 영속화는 Volume 활용
+
+# 컨테이너 라이프사이클
+docker pull
+    │
+    ▼
+[Image] ──── docker run ────▶ [Running] ──── docker stop ────▶ [Stopped]
+                                  │                                  │
+                              docker rm                          docker start
+                                  │                                  │
+                              [Deleted]                          [Running]
+
+# Docker Container 명령어
+1) docker run - 컨테이너 실행
+-d : 백그라운드(Detached) 실행 / docker run -d nginx
+-it : 대화형 터미널 연결(-i 표준 입력 유지 + -t TTY 할당) / docker run -it ubuntu bash
+--name <이름> : 컨테이너 이름 지정 / docker run --name web nginx
+-p <호스트 포트>:<컨테이너 포트> : 포트 매핑 / docker run -p 8080:80 nginx
+-v <호스트 경로>:<컨테이너 경로> : 볼륨 / 바인드 마운트 / docker run -v /data:/lib
+-e <KEY>=<VALUE> : 환경변수 설정 / docker run -e MYSQL_ROOT_PASSWORD=root mysql
+--rm : 컨테이너 종료 시 자동 삭제 / docker run --rm ubuntu echo "hi"
+--network <네트워크명> : 네트워크 지정 / docker run --network my-net nginx
+--restart <정책> : 재시작 정책 지정 
+-> no : 재시작 안 함 (기본값) / 일회성 테스트 컨테이너
+-> always : 항상 재시작 (수동 stop후에도) / 중요 서비스
+-> on-failure : 비정상 종료(exit code !=0)시만 재시작 / 배치 작업 컨테이너
+-> unless-stopped : 수동 stop 제외하고 항상 재식 / 운영 서비스 권장
+
+2) docker ps - 컨테이너 목록
+- (없음) : 실행 중인 컨테이너만 출력 / docker ps
+-a : 중지된 컨테이너 포함 전체 출력 / docker ps -a
+-q : 컨테이너 ID만 출력 / docker ps -q
+-f ancestor=<이미지> : 특정 이미지 기반 컨테이너만 필터 / docker ps -f ancestor=nginx
+-f status=exited : 중료된 컨테이너만 필터 / docker ps -f status=exited
+--format "table{{.Names}}\t{{.Status}}" : 출력 포맷 지정 / docker ps --format "table {{.Names}}\t{{.Status}}"
+
+3) docker logs - 컨테이너 로그
+- (없음) : 전체 로그 출력 / docker logs web
+-f : 실시간 로그 스트리밍 (tail -f 동일) / docker logs -f web
+--tail <N> : 최근 N줄만 출력 / docker logs --tail 50 web
+-t : 타임스탬프 포함 출력 / docker logs -t web
+--since <시간> : 특정 시간 이후 로그만 출력 / docker logs --since 10m web
+--until <시간> : 특정 시간 이전 로그만 출력 / docker logs --until 2024-01-01 web
+
+4) docker exec - 컨테이너 내부 명령 실행
+- (없음) : 단발성 명렁어 실행 / docker exec web ls /usr/share/nginx/html
+-it : 대화형 터미널 접속 / docker exec -it web bash
+-it ... sh : bash 없는 경량 이미지(alpine)에서 접속 / docker exec -it web sh
+--user <유저> : 특정 유저로 실행 / docker exec --user root -it web bash
+-e <KEY>=<VALUE> : 명령 실행 시 환경변수 추가 / docker exec -e DEBUG=true web env
+
+5) docker cp - 파일 복사
+- 호스트 -> 컨테이너 / docker cp <호스트 경로> <컨테이너>:<컨테이너 경로> 
+- 컨테이너 -> 호스트 / docker cp <컨테이너>:<컨테이너 경로> <호스트 경로>
+- 디렉토리 복사 / docker cp <디렉터리>/ <컨테이너>:<경로>/
+
+6) docker stop / start / restart / kill - 컨테이너 제어
+- docker stop : 정상 종료
+- docker stop -t<초> : 대기 시간 지정 후 종료
+- docker kill : 즉시 강제 종료
+- docker start : 중지된 컨테이너 시작
+- docker restart : 재시작 
+- docker restart -t<초> : 대기 시간 지정 후 재시작
+
+7) docker rm - 컨테이너 삭제
+- docker rm : 중지된 컨테이너 삭제
+- docker rm -f : 실행 중인 컨테이너 삭제
+- docker rm $(docker ps -aq) : 전체 컨테이너 삭제
+
+8) docker container inspect - 컨테이너 상세 정보
+- (없음) : JSON 전체 메타데이터 출력 / docker container inspect web
+- | grep -A3 "RestartPolicy" : 재시작 정책 확인 
+--format '{{.NetworkSettings.IPAddress}}' : 특정 필드만 추출
+

@@ -1,0 +1,411 @@
+ubuntu@ubuntu:~/docker/04.dockerfile$ docker build -t from-test:1.0 .
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  2.048kB
+Step 1/1 : FROM nginx:alpine
+alpine: Pulling from library/nginx
+589002ba0eae: Pulling fs layer
+d2a46166eee6: Pulling fs layer
+593488f95c35: Pulling fs layer
+e19aff8f2cce: Pulling fs layer
+1549d7aec962: Pulling fs layer
+1f25242adbdb: Pulling fs layer
+c32126d2b96c: Pulling fs layer
+c24026275c33: Pulling fs layer
+e19aff8f2cce: Waiting
+1549d7aec962: Waiting
+1f25242adbdb: Waiting
+c32126d2b96c: Waiting
+c24026275c33: Waiting
+593488f95c35: Verifying Checksum
+593488f95c35: Download complete
+d2a46166eee6: Verifying Checksum
+d2a46166eee6: Download complete
+589002ba0eae: Verifying Checksum
+589002ba0eae: Download complete
+589002ba0eae: Pull complete
+d2a46166eee6: Pull complete
+593488f95c35: Pull complete
+e19aff8f2cce: Verifying Checksum
+e19aff8f2cce: Download complete
+1549d7aec962: Verifying Checksum
+1549d7aec962: Download complete
+e19aff8f2cce: Pull complete
+1549d7aec962: Pull complete
+1f25242adbdb: Verifying Checksum
+1f25242adbdb: Download complete
+1f25242adbdb: Pull complete
+c32126d2b96c: Verifying Checksum
+c32126d2b96c: Download complete
+c32126d2b96c: Pull complete
+c24026275c33: Verifying Checksum
+c24026275c33: Download complete
+c24026275c33: Pull complete
+Digest: sha256:f46cb72c7df02710e693e863a983ac42f6a9579058a59a35f1ae36c9958e4ce0
+Status: Downloaded newer image for nginx:alpine
+ ---> d0c780774910
+Successfully built d0c780774910
+Successfully tagged from-test:1.0
+
+ubuntu@ubuntu:~/docker/04.dockerfile$ docker images
+REPOSITORY   TAG       IMAGE ID       CREATED       SIZE
+nginx        alpine    d0c780774910   13 days ago   62.2MB
+from-test    1.0       d0c780774910   13 days ago   62.2MB
+
+ubuntu@ubuntu:~/docker/04.dockerfile$ docker images -q
+d0c780774910
+d0c780774910
+
+ubuntu@ubuntu:~/docker/04.dockerfile$ vi Dockerfile
+ubuntu@ubuntu:~/docker/04.dockerfile$ vi index.html
+
+-- dockerfile --
+  1 FROM nginx:alpine
+  2 WORKDIR /usr/share/nginx/html
+  3 COPY index.html .
+
+  docker build -t workdir-test:1.0 .
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  3.072kB
+Step 1/3 : FROM nginx:alpine
+ ---> d0c780774910
+Step 2/3 : WORKDIR /usr/share/nginx/html
+ ---> Running in b970a4c36f37
+ ---> Removed intermediate container b970a4c36f37
+ ---> 7e157ee71ff0
+Step 3/3 : COPY index.html .
+ ---> 9649e9a88a39
+Successfully built 9649e9a88a39
+Successfully tagged workdir-test:1.0
+
+ubuntu@ubuntu:~/docker/04.dockerfile$ docker images
+REPOSITORY     TAG       IMAGE ID       CREATED          SIZE
+workdir-test   1.0       9649e9a88a39   14 seconds ago   62.2MB
+from-test      1.0       d0c780774910   13 days ago      62.2MB
+nginx          alpine    d0c780774910   13 days ago      62.2MB
+
+
+docker image inspect workdir-test:1.0
+[
+    {
+        "Id": "sha256:9649e9a88a39f0d79fb62a5a033bc75b3ee174f79c7fc21f57c8f01afca90e05",
+        "RepoTags": [
+            "workdir-test:1.0"
+        ],
+        "RepoDigests": [],
+        "Parent": "sha256:7e157ee71ff0bf0605c83af4eb3ff337e70b9be1bd12d1d08e22c30000153817",
+        "Comment": "",
+        "Created": "2026-03-24T07:49:08.469717825Z",
+        "DockerVersion": "28.2.2",
+        "Author": "",
+        "Config": {
+            "ExposedPorts": {
+                "80/tcp": {}
+            },
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "NGINX_VERSION=1.29.6",
+                "PKG_RELEASE=1",
+                "DYNPKG_RELEASE=1",
+                "NJS_VERSION=0.9.6",
+                "NJS_RELEASE=1",
+                "ACME_VERSION=0.3.1"
+            ],
+            "Entrypoint": [
+                "/docker-entrypoint.sh"
+            ],
+            "Cmd": [
+                "nginx",
+                "-g",
+                "daemon off;"
+            ],
+            "WorkingDir": "/usr/share/nginx/html",
+            "Labels": {
+                "maintainer": "NGINX Docker Maintainers <docker-maint@nginx.com>"
+            },
+            "StopSignal": "SIGQUIT"
+        },
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 62174508,
+        "GraphDriver": {
+            "Data": {
+                "LowerDir": "/var/lib/docker/overlay2/2f402cbca5d775c9dbe05c7ba2489359fe13c176e8f94d5f8988287ceb201a67/diff:/var/lib/docker/overlay2/b2022c16d5ba05480cec5df422cb84fd6ace1c899f5124d0d42b1b9266cfa027/diff:/var/lib/docker/overlay2/f0e2f426c47d9789fbafbe25eff88be9b3737b33e44e9ceae61c75467dd13b49/diff:/var/lib/docker/overlay2/8b88124444a2d6565d960f3d469d1fad9a39f3f00e4e4a7c6b2da707ae9c24bc/diff:/var/lib/docker/overlay2/e50491656a557e7a0df551869121d25ee8bb7772c2ee8a959b584f981eb5decd/diff:/var/lib/docker/overlay2/dec0e148c6a5fa48e6bf29564b0be3075c699ac1d1b3cd9fb98f7caf2a1e6449/diff:/var/lib/docker/overlay2/b94ca1145036c2fa7fc0d247b00ead60c753bf2d3bccf20d77fe98687a89db4a/diff:/var/lib/docker/overlay2/45352667d3216b569da0e29b801bf07ddb4c3b3dbc7c722d1547cb1fb94a44ad/diff",
+                "MergedDir": "/var/lib/docker/overlay2/5f18298ef4f2fd51a46e2ca3958c4880ada0c34e72a4c6b52278da1cd4a95bb0/merged",
+                "UpperDir": "/var/lib/docker/overlay2/5f18298ef4f2fd51a46e2ca3958c4880ada0c34e72a4c6b52278da1cd4a95bb0/diff",
+                "WorkDir": "/var/lib/docker/overlay2/5f18298ef4f2fd51a46e2ca3958c4880ada0c34e72a4c6b52278da1cd4a95bb0/work"
+            },
+            "Name": "overlay2"
+        },
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:989e799e634906e94dc9a5ee2ee26fc92ad260522990f26e707861a5f52bf64e",
+                "sha256:5bb518009c83d498f71263ffc016f9f447251adbd2529289ead569af6f8e70e6",
+                "sha256:ea6528e5378341e48a761c0bac1ad6c3974d87fb870aaba005c4cd50817dbdff",
+                "sha256:09c3b60a3926ba8b1f23fddac881831a17ed7e803aee91e59c86f25f131e87c5",
+                "sha256:e0fe744d26d4e1c18fc24961038c30992ebc3399f9b3d7f136fad15d6db08db4",
+                "sha256:04297a721e7f464d1c7e35294c019010fd7fd20ec1b3891ee207e7dd39c4fcff",
+                "sha256:5693fac86db4876970e0bbdd63d9b50ed650051457225e9377d8b72a35aba7bd",
+                "sha256:d408059e7553020f3caf3f88b3d1f012c7a0528299b077a5b8ee2ea70e29f109",
+                "sha256:3503e2a4fbb31eb29b4ef9b971c47533b208391ac23e7324f9f49519953082ad"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "2026-03-24T16:49:08.497340116+09:00"
+        }
+    }
+]
+
+
+--- add
+
+ubuntu@ubuntu:~/docker/04.dockerfile$ mkdir -p addtest
+ubuntu@ubuntu:~/docker/04.dockerfile$ echo "<p>ADD로 추가된 파일</p>" > addtest/add.html
+ubuntu@ubuntu:~/docker/04.dockerfile$ tree
+.
+├── addtest
+│   └── add.html
+├── Dockerfile
+└── index.html
+
+- add 디렉터리 묶기
+ubuntu@ubuntu:~/docker/04.dockerfile$ tar -czf archieve.tar.gz addtest/
+ubuntu@ubuntu:~/docker/04.dockerfile$ ls
+addtest  archieve.tar.gz  Dockerfile  index.html
+
+-- dockerfile
+  1 FROM nginx:alpine
+  2 WORKDIR /usr/share/nginx/html
+  3 COPY index.html .
+  4 ADD archive.tar.gz .
+
+
+docker build -t add-test:1.0 .
+
+docker run --rm add-test:1.0 ls -al
+docker run --rm add-test:1.0 tree
+docker run --rm add-test:1.0 cat index.html
+
+*** ENV ***
+-- dockerfile
+  1 FROM nginx:alpine
+  2 
+  3 ARG ARG_VERSION=1.0.0
+  4 ARG ARG_NAME=100
+  5 
+  6 ENV NGINX_PORT=80
+  7 ENV VERSION=${ARG_VERSION}
+  8 
+  9 
+ 10 WORKDIR /usr/share/nginx/html
+ 11 COPY index.html .
+ 12 ADD archieve.tar.gz .
+ 13 
+ 14 EXPOSE ${NGINX_PORT}
+
+ 
+## 전용 사용자 생성
+# ubuntu : groupadd --system
+RUN addgroup -S appgroup && \
+    adduser -S appuser -G appgroup
+
+# nginx가 필요한 디렉토리 권한 미리 설정
+RUN mkdir -p /var/cache/nginx/client_temp \
+             /var/cache/nginx/proxy_temp \
+             /var/cache/nginx/fastcgi_temp \
+             /var/cache/nginx/uwsgi_temp \
+             /var/cache/nginx/scgi_temp \
+    && chown -R appuser:appgroup /var/cache/nginx \
+    && chown -R appuser:appgroup /var/log/nginx \
+    && chown -R appuser:appgroup /etc/nginx/conf.d \
+    && touch /var/run/nginx.pid \
+    && chown appuser:appgroup /var/run/nginx.pid
+
+# nginx.conf에서 user 지시어 제거 (비root 실행 시 불필요)
+RUN sed -i '/^user/d' /etc/nginx/nginx.conf
+
+# 파일 소유권 변경
+# COPY index.html /usr/share/nginx/html/
+# RUN chwon appuser:appgroup /usr/share/nginx/html/index.html
+COPY --chown=appuser:appgroup index.html /usr/share/nginx/html/
+
+USER appuser
+
+EXPOSE 80
+
+--- 결과 확인
+
+ubuntu@ubuntu:~/docker/04.dockerfile$ docker build -t secure-test .
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  6.656kB
+Step 1/5 : FROM nginx:alpine
+ ---> d0c780774910
+Step 2/5 : RUN addgroup -S appgroup &&     adduser -S appuser -G appgroup
+ ---> Running in b6468beb4bd4
+ ---> Removed intermediate container b6468beb4bd4
+ ---> f4355100f083
+Step 3/5 : COPY --chown=appuser:appgroup index.html /usr/share/nginx/html/
+ ---> a6af47ddf62b
+Step 4/5 : USER appuser
+ ---> Running in 19b35dec9ea6
+ ---> Removed intermediate container 19b35dec9ea6
+ ---> cbcf7b5f3818
+Step 5/5 : EXPOSE 80
+ ---> Running in f5ebf45c1fc1
+ ---> Removed intermediate container f5ebf45c1fc1
+ ---> 74cbda97a3a0
+Successfully built 74cbda97a3a0
+Successfully tagged secure-test:latest
+
+---
+ubuntu@ubuntu:~/docker/04.dockerfile$ docker inspect secure-test:latest | grep -i user
+            "User": "appuser",
+
+--- 실행 확인
+
+--- 멀티 빌더
+ubuntu@ubuntu:~/docker/04.dockerfile$ docker buildx build --platform=linux/amd64,linux/arm64 -t dockerlecture/infra-basic:latest --push .
+[+] Building 0.0s (0/0)                                           docker:default
+ERROR: Multi-platform build is not supported for the docker driver.
+Switch to a different driver, or turn on the containerd image store, and try again.
+Learn more at https://docs.docker.com/go/build-multi-platform/
+ubuntu@ubuntu:~/docker/04.dockerfile$ docker buildx ls
+NAME/NODE     DRIVER/ENDPOINT   STATUS    BUILDKIT   PLATFORMS
+default*      docker                                 
+ \_ default    \_ default       running   v0.22.0    linux/amd64 (+3), linux/386
+ubuntu@ubuntu:~/docker/04.dockerfile$ docker buildx create --name multibuilder --use
+multibuilder
+ubuntu@ubuntu:~/docker/04.dockerfile$ docker buildx ls
+NAME/NODE           DRIVER/ENDPOINT                   STATUS     BUILDKIT   PLATFORMS
+multibuilder*       docker-container                                        
+ \_ multibuilder0    \_ unix:///var/run/docker.sock   inactive              
+default             docker                                                  
+ \_ default          \_ default                       running    v0.22.0    linux/amd64 (+3), linux/386
+
+ubuntu@ubuntu:~/docker/04.dockerfile$ docker buildx inspect --builder multibuilder --bootstrap
+[+] Building 24.1s (1/1) FINISHED                                                                                                                                            
+ => [internal] booting buildkit                                                                                                                                        24.0s
+ => => pulling image moby/buildkit:buildx-stable-1                                                                                                                     22.0s
+ => => creating container buildx_buildkit_multibuilder0                                                                                                                 2.0s
+Name:          multibuilder
+Driver:        docker-container
+Last Activity: 2026-03-25 02:21:24 +0000 UTC
+
+Nodes:
+Name:     multibuilder0
+Endpoint: unix:///var/run/docker.sock
+Error:    Get "http://%2Fvar%2Frun%2Fdocker.sock/v1.48/containers/buildx_buildkit_multibuilder0/json": context deadline exceeded
+ubuntu@ubuntu:~/docker/04.dockerfile$ docker buildx ls
+NAME/NODE           DRIVER/ENDPOINT                   STATUS    BUILDKIT   PLATFORMS
+multibuilder*       docker-container                                       
+ \_ multibuilder0    \_ unix:///var/run/docker.sock   running   v0.28.0    linux/amd64 (+3), linux/386
+
+ubuntu@ubuntu:~/docker/04.dockerfile$ docker buildx build --platform=linux/amd64,linux/arm64 -t dockerlecture/infra-basic:latest --push .
+
+ubuntu@ubuntu:~/docker/04.dockerfile$ docker buildx imagetools inspect dockerlecture/infra-basic:latest
+
+ubuntu@ubuntu:~/docker/04.dockerfile$ docker buildx ls
+NAME/NODE           DRIVER/ENDPOINT                   STATUS    BUILDKIT   PLATFORMS
+multibuilder*       docker-container                                       
+ \_ multibuilder0    \_ unix:///var/run/docker.sock   running   v0.28.0    linux/amd64 (+3), linux/386
+default             docker                                                 
+ \_ default          \_ default                       running   v0.22.0    linux/amd64 (+3), linux/386
+ubuntu@ubuntu:~/docker/04.dockerfile$ docker buildx use default
+ubuntu@ubuntu:~/docker/04.dockerfile$ docker buildx ls
+NAME/NODE           DRIVER/ENDPOINT                   STATUS    BUILDKIT   PLATFORMS
+multibuilder        docker-container                                       
+ \_ multibuilder0    \_ unix:///var/run/docker.sock   running   v0.28.0    linux/amd64 (+3), linux/386
+default*            docker                                                 
+ \_ default          \_ default                       running   v0.22.0    linux/amd64 (+3), linux/386
+ubuntu@ubuntu:~/docker/04.dockerfile$ docker buildx stop multibuilder
+ubuntu@ubuntu:~/docker/04.dockerfile$ docker buildx ls
+NAME/NODE           DRIVER/ENDPOINT                   STATUS    BUILDKIT   PLATFORMS
+multibuilder        docker-container                                       
+ \_ multibuilder0    \_ unix:///var/run/docker.sock   stopped              
+default*            docker                                                 
+ \_ default          \_ default                       running   v0.22.0    linux/amd64 (+3), linux/386
+ubuntu@ubuntu:~/docker/04.dockerfile$ docker buildx rm  multibuilder
+multibuilder removed
+ubuntu@ubuntu:~/docker/04.dockerfile$ docker buildx ls
+NAME/NODE     DRIVER/ENDPOINT   STATUS    BUILDKIT   PLATFORMS
+default*      docker                                 
+ \_ default    \_ default       running   v0.22.0    linux/amd64 (+3), linux/386
+ubuntu@ubuntu:~/docker/04.dockerfile$ docker buildx du
+Reclaimable:    0B
+Total:          0B
+ubuntu@ubuntu:~/docker/04.dockerfile$ docker buildx prune
+
+---
+2. .dockerignore 효과 확인
+# 현재 위치: /home/ubuntu/docker/04.dockerfile/nginx
+
+# 1. .dockerignore 없이 빌드 → 빌드 컨텍스트 전송 크기 확인
+docker build -t nginx-test:1.0 .
+# "Sending build context to Docker daemon" 크기 확인
+
+# 2. .dockerignore 생성
+echo "fake_target/" > .dockerignore
+
+# 3. .dockerignore 적용 후 재빌드 → 컨텍스트 크기 비교
+docker build -t nginx-test:2.0 .
+
+# 4. 두 이미지 크기 비교 (docker images)
+# → 빌드 컨텍스트가 달라도 최종 이미지 크기는 동일 (COPY한 파일만 포함)
+# → 빌드 속도 차이 확인
+
+# 5. docker rm -f 및 이미지 정리
+docker rmi nginx-test:1.0 nginx-test:2.0
+
+
+---
+  ubuntu@ubuntu:~/docker/04.dockerfile/nginx$ tree
+.
+├── Dockerfile
+├── fake_target
+│   └── dummy.jar
+└── index.html
+
+2 directories, 3 files
+
+ubuntu@ubuntu:~/docker/04.dockerfile/nginx$ docker build -t nginx-test:1.0 .
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  10.49MB
+Step 1/3 : FROM nginx:alpine
+ ---> d5030d429039
+Step 2/3 : COPY index.html /usr/share/nginx/html/index.html
+ ---> be7399075c8d
+Step 3/3 : EXPOSE 80
+ ---> Running in 1fca9945e4e0
+ ---> Removed intermediate container 1fca9945e4e0
+ ---> 3a8676c56915
+Successfully built 3a8676c56915
+Successfully tagged nginx-test:1.0
+ubuntu@ubuntu:~/docker/04.dockerfile/nginx$ echo "fake_target/" > .dockerignore
+ubuntu@ubuntu:~/docker/04.dockerfile/nginx$ docker build -t nginx-test:2.0 .
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  4.096kB
+Step 1/3 : FROM nginx:alpine
+ ---> d5030d429039
+Step 2/3 : COPY index.html /usr/share/nginx/html/index.html
+ ---> Using cache
+ ---> be7399075c8d
+Step 3/3 : EXPOSE 80
+ ---> Using cache
+ ---> 3a8676c56915
+Successfully built 3a8676c56915
+Successfully tagged nginx-test:2.0

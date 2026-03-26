@@ -1,0 +1,47 @@
+# 현재 위치: /home/ubuntu/10.pipe_redirect
+
+# 1. app.log에서 ERROR 행만 필터링 → output/error_only.txt 로 저장
+- grep "ERROR" app.log > error_only.txt
+# 2. app.log에서 ERROR 행을 grep으로 필터 후 tee로 화면 출력 + output/error_tee.txt 저장
+- grep "ERROR" app.log | tee output/error_tee.txt
+
+# 3. 존재하지 않는 파일을 cat 으로 열 때 에러 메시지 → output/err.txt 로 저장
+#    cat /notexist.log 2> output/err.txt
+# 4. app.log 의 전체 출력과 에러를 모두 output/all.txt 로 저장
+#    cat logs/app.log /notexist.log &> output/all.txt
+
+# 5. find로 .log 파일 검색 결과를 output/loglist.txt 에 저장하면서 화면에도 출력 (tee)
+- find -name "*.log" | tee output/loglist.txt
+
+# 현재 위치: /home/ubuntu/10.pipe_redirect
+
+# 1. app.log에서 ERROR 필터 → HealthCheck 제외 → 줄 수 카운트 (파이프 3단계)
+- cat logs/app.log | grep "ERROR" | grep -v"HealthCheck" | wc -l
+
+# 2. app.log에서 ERROR 행 추출 → 서비스명($4) 출력 → 정렬 → 중복 제거
+#    cat | grep | awk | sort | uniq
+- cat logs/app.log | grep "ERROR" | awk '{print $4}' | sort | uniq
+
+# 3. /etc/passwd 에서 사용자명만 추출 후 정렬
+#    cat /etc/passwd | cut -d: -f1 | sort
+
+# 4. app.log 전체 행 수 / ERROR 행 수 / WARN 행 수를 각각 wc -l 로 출력
+- echo "---전체---" && wc -l < logs/app.log
+
+# 5. find로 30일 초과 .log 검색 결과를 xargs로 rm 실행
+#    (먼저 find만 실행해서 대상 확인 후 xargs rm 적용)
+- find -name "*.log" -mtime +30 | xargs rm 
+
+- xargs -0 rm -> -0 : 구분자 공백없이 null 처리
+
+
+# 2. 히어독으로 application-prod.yml 생성
+#    (위 dev 내용을 참고하여 prod 값으로 직접 작성)
+
+# 3. diff <(cat application-dev.yml) <(cat application-prod.yml) 로 두 파일 비교
+# 4. 두 파일의 password 행만 grep으로 추출 → ../output/passwords.txt 저장
+#    2>/dev/null 로 에러는 버리기
+# 5. cat application-prod.yml | tee /tmp/prod_config_backup.yml 로
+#    화면 출력과 동시에 /tmp 에 백업
+
+

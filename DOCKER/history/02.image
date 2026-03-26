@@ -1,0 +1,83 @@
+***  Docker image ***
+- 컨테니어 실행에 필요한 읽기 전용(Read-Only) 템플릿
+- 소스 코드, 라이브러리, 런타임, 설정 파일 등 애플리케이션 실행에 필요한 모든 것을 포함
+- 한 번 빌드된 이미지는 변경 불가(Immutable) - 동일한 환경을 어디서나 재현 가능
+
+# 이미지 레이어 구조
+┌────────────────────────────────┐
+│  Container Layer (R/W)         │  ← 컨테이너 실행 시 생성되는 쓰기 레이어
+├────────────────────────────────┤
+│  COPY index.html (Layer 4)     │  ← Dockerfile 각 명령어가 레이어 생성
+├────────────────────────────────┤
+│  RUN apt-get install (Layer 3) │
+├────────────────────────────────┤
+│  RUN apt-get update  (Layer 2) │
+├────────────────────────────────┤
+│  FROM ubuntu:22.04   (Layer 1) │  ← Base Image
+└────────────────────────────────┘
+
+# 레이어 특징
+1)재사용 : 동일한 레이어는 여러 이미지가 공유 - 저장소/다운로드 절감
+2) 격리 : 각 레이어는 독립적인 파일 시스템 변경사항만 포함
+3) 불변 : 기존 레이어는 수정 불가 - 변경 시 새 레이어 추가
+4) 캐시 : 빌드 시 변경되지 않은 레이어는 캐시 활용 -> 빌드 속도 향상
+
+# 이미지 명령어 
+1) docker pull - 이미지 다운로드
+- <이미지> : latest 태그로 다운로드 (기본값) / ex) docker pull nginx
+- <이미지>:<태그> : 특정 버전 태그 지정 / ex) docker pull nginx:1.25
+- <이미지>:alpine : 경량화 Alpine 기반 이미지 / ex) docker pull nginx:Alpine
+- <이미지>:slim : 최소 패키지 이미지 / ex) docker pull node:20-slim
+
+2) docker images / docker image ls - 이미지 목록
+- (없음) : 전체 이미지 목록 출력 / ex) docker images
+-a : 중간 레이어 이미지 포함 출력 / ex) docker images -a
+-q : 이미지 ID만 출력 / ex) docker images -q
+--fileter dangling=true : <none> 태그 이미지만 출력
+
+3) docker search -Docker Hub 검색
+- <키워드> : 키워드로 이미지 검색 / ex) docker search nginx
+--filter is-official=true : 공식 이미지만 필터
+--filter stars=100 : 별점 N 이상만 필터
+--limit <N> : 출력 결과 수 제한 / ex) docker search --limit 5 nginx
+
+4) docker image inspect - 이미지 상세 정보
+- (없음) : JSON 전체 메타데이터 출력 / docker image inspect nginx
+--format '{{.Os}}' : 특정 필드만 출력 
+ex) docker image inspect nginx --format '{{.Os}}/{{.Architecture}}'
+- | grep -A5 "Layers" : 레이어 해시 목록 확인 
+
+5) docker history - 레이어 히스토리
+- (없음) : 레이어 별 명령어 및 크기 출력 / docker history nginx
+--no-trunc : 명령어 전체 출력 (잘림 방지)
+-q : 레이어 ID만 출력 / docker history -q nginx
+
+6) docker tag - 태그 추가
+- <기존 이미지> <새이름>:<태그> : 로컬 태그 추가 
+ex) docker tag nginx:latest my-nginx:v1.0
+- <이미지> <레지스트리>/<이름>:<태그> : 레지스트리 push 전 태그 
+ex) docker tag nginx 123.dkr.ecr.../my-nginx:v1
+
+7) docker save / docker load - 이미지 파일 저장, 복원
+- docker save / -o <파일>.tar : 이미지 tar 파일로 저장
+ex) docker save -o nginx.tar nginx:alpine
+- dosker save / (여러 이미지) : 여러 이미지를 하나의 tar로 저장
+- docker load / -i <파일>.tar : tar 파일에서 이미지 복원 
+ex) docker load -i nginx.tar
+
+8) docker rmi - 이미지 삭제
+- <이미지명> : 이미지 삭제 (컨테이너 미사용 시) / docker rmi nginx:alpine
+-f : 사용 중인 이미지 강제 삭제 / docker rmi -f ngnix:latest
+- $(docker images -q) : 전체 이미지 삭제 / docker rmi $(docker images -q)
+
+9) docker image prune - 미사용 이미지 정리
+- (없음) : dangling 이미지(<none>)만 삭제 / docker image prune
+-a : 컨테이너가 사용하지 않는 모든 이미지 삭제 / docker image prune -a
+-f : 확인 없이 바로 삭제 / docker image prune -f
+
+# Docker Hub 태그 종류
+- latest : 최신 안정 버전(기본값) / 빠른 테스트용 (운영 비권장)
+- 1.25, 8.0 등 : 특정 버전 고정 / 운영 환경 필수
+- alpine : Alpine Linux 기반 경량 이미지 / 이미지 크기 최소화
+- slim : 불필요한 패키지 제거 최소 이미지 / 중간 사이즈 절충
+- nightly : 소스 코드 최신 빌드 (불안정) / 최신 기능 테스트용

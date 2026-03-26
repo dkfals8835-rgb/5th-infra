@@ -1,0 +1,25 @@
+# 현재 위치: /home/ubuntu/08.disk
+
+# 1. df -h 로 전체 파일시스템 용량 현황 확인
+# 2. du -sh app/* 로 app 하위 각 디렉터리 용량 확인
+# 3. du -sh app/* | sort -rh 로 용량 큰 순 정렬
+# 4. du -ah app/logs/ 로 로그 파일별 용량 확인
+# 5. 10MB 이상 파일을 find -size +10M 으로 검색
+- find 
+# 6. app/logs/error.log 를 gzip 압축 후 용량 변화 비교
+
+# 현재 위치: /home/ubuntu/08.disk
+
+# 1. df -h | grep -v tmpfs 로 실제 디스크만 확인
+# 2. du -sh /home/ubuntu/* | sort -rh | head -5 로 상위 5개 용량 항목 확인
+# 3. find /home/ubuntu -type f -size +50M 으로 50MB 초과 파일 전체 검색
+# 4. find /home/ubuntu -name "*.log" -mtime +30 으로 30일 초과 로그 검색
+# 5. lsblk -f 로 파일시스템 구조 확인
+
+# 현재 위치: /home/ubuntu/08.disk
+
+# 1. app/cache/ 디렉터리 용량 확인 후 전체 삭제
+# 2. app/logs/ 에서 5MB 초과 로그 파일 검색 후 gzip 압축
+# 3. 압축 전후 du -sh app/logs/ 용량 비교
+# 4. df -h 로 정리 후 디스크 현황 재확인
+# 5. /tmp 디렉터리 용량 확인 (du -sh /tmp)

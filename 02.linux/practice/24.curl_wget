@@ -1,0 +1,179 @@
+# GET 요청
+curl https://api.github.com                             # 기본 GET
+curl -s https://api.github.com | head -20               # 조용히 받아서 앞 20줄
+curl -I https://google.com                              # 헤더만 확인
+curl -L https://google.com -o /dev/null -w "%{http_code}\n"  # 상태 코드만 확인
+
+# POST 요청
+curl -X POST https://api.example.com/users \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TOKEN" \
+  -d '{"name":"ubuntu","email":"test@example.com"}'
+
+# 파일로 바디 전달
+curl -X POST https://api.example.com/data \
+  -H "Content-Type: application/json" \
+  -d @request.json
+
+# https://jsonplaceholder.typicode.com/users 실습
+# GET : curl -s https://jsonplaceholder.typicode.com/users
+# GET : curl -s https://jsonplaceholder.typicode.com/users/1
+# POST : curl -s https://jsonplaceholder.typicode.com/users
+# 예시 user
+{
+  "name": "Kim DevOps",
+  "username": "kimdevops",
+  "email": "kim@example.com"
+}
+- GET : curl -s https://jsonplaceholder.typicode.com/users | jq '.[].email'
+"Sincere@april.biz"
+"Shanna@melissa.tv"
+"Nathan@yesenia.net"
+"Julianne.OConner@kory.org"
+"Lucio_Hettinger@annie.ca"
+"Karley_Dach@jasper.info"
+"Telly.Hoeger@billy.biz"
+"Sherwood@rosamond.me"
+"Chaim_McDermott@dana.io"
+"Rey.Padberg@karina.biz"
+
+- POST : curl -X POST https://jsonplaceholder.typicode.com/users 
+-H "Content-Type: application/json" 
+-d '{"name": "Kim DevOps", "username": "kimdevops", "email": "kim@example.com"}'
+
+** 파일로 저장
+- vi new_user.json -> 생성
+- POST : curl -X POST https://jsonplaceholder.typicode.com/users 
+-H "Content-Type: application/json" 
+-d @/home/ubuntu/24.curl_wget/new_user.json
+
+
+
+# PUT / PATCH : curl -s https://jsonplaceholder.typicode.com/users
+# 예시 user/1
+{
+  "id": 1,
+  "name": "Updated Name",
+  "username": "updateduser",
+  "email": "updated@example.com"
+}
+
+-curl -s PUT https://jsonplaceholder.typicode.com/users
+-curl -s PATCH https://jsonplaceholder.typicode.com/users
+
+# DELETE : curl -s https://jsonplaceholder.typicode.com/users/1
+- 상태 확인 
+curl -s DELETE https://jsonplaceholder.typicode.com/users/1 \ 
+> -s -o /dev/null -w "%{http_code}\n"
+
+# Authorization 헤더 패턴
+# Bearer Token (JWT 인증 — Spring Boot Token)
+curl -s https://jsonplaceholder.typicode.com/users/1 \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9..." \
+  | jq .
+
+
+*** wget 
+https://example.com/file.tar.gz                    # 기본 다운로드
+wget -O myfile.tar.gz https://example.com/file.tar.gz  # 이름 지정
+wget -P /tmp/ https://example.com/file.tar.gz          # 디렉터리 지정
+wget -c https://example.com/largefile.tar.gz           # 이어받기
+wget -q --tries=3 https://example.com/file.tar.gz      # 조용히 + 3회 재시도
+
+
+# jq
+# 기본 포맷팅
+echo '{"name":"ubuntu","age":30}' | jq .
+
+# 특정 필드 추출
+echo '{"name":"ubuntu","port":8080}' | jq '.name'
+echo '{"name":"ubuntu","port":8080}' | jq '.port'
+
+# 배열 처리
+echo '[{"id":1,"name":"Alice"},{"id":2,"name":"Bob"}]' | jq '.[0]'
+echo '[{"id":1,"name":"Alice"},{"id":2,"name":"Bob"}]' | jq '.[].name'
+
+# 조건 필터
+echo '[{"id":1,"active":true},{"id":2,"active":false}]' | jq '.[] | select(.active == true)'
+
+# curl + jq 조합
+curl -s https://api.github.com | jq '.current_user_url'
+curl -s https://api.ipify.org?format=json | jq '.ip'
+
+1. REST API 테스트
+
+# 테스트용 간이 HTTP 서버 실행
+mkdir -p /home/ubuntu/24.curl_wget/server
+
+cat > /home/ubuntu/24.curl_wget/server/data.json << 'EOF'
+{
+  "status": "ok",
+  "version": "2.1.0",
+  "services": [
+    {"name": "user-service", "port": 8081, "status": "running"},
+    {"name": "post-service", "port": 8082, "status": "running"},
+    {"name": "auth-service", "port": 8083, "status": "stopped"}
+  ]
+}
+EOF
+
+cd /home/ubuntu/24.curl_wget/server
+python3 -m http.server 8099 > /dev/null 2>&1 &
+echo $! > /home/ubuntu/24.curl_wget/server.pid
+cd /home/ubuntu/24.curl_wget
+
+# 현재 위치: /home/ubuntu/24.curl_wget
+
+# 1. curl -s http://localhost:8099/data.json 으로 JSON 응답 확인
+# 2. curl -I http://localhost:8099/data.json 으로 헤더만 확인
+# 3. curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8099/data.json
+#    으로 상태 코드만 확인
+# 4. curl -s http://localhost:8099/data.json | jq . 으로 포맷팅 출력
+# 5. curl -s http://localhost:8099/data.json | jq '.version' 으로 버전만 추출
+# 6. curl -s http://localhost:8099/data.json | jq '.services[].name'
+#    으로 서비스 이름만 추출
+# 7. curl -s http://localhost:8099/data.json | jq '.services[] | select(.status == "stopped")'
+#    으로 중지된 서비스만 필터
+# 8. kill $(cat server.pid) && rm server.pid 로 정리
+
+2. 파일 다운로드 및 응답 시간 측정
+
+# 현재 위치: /home/ubuntu/24.curl_wget
+
+# 1. curl -s https://api.ipify.org?format=json 으로 공인 IP 확인
+# 2. curl -s https://api.ipify.org?format=json | jq '.ip' 으로 IP만 추출
+# 3. curl -s -o /dev/null -w "상태코드: %{http_code}\n응답시간: %{time_total}s\n" \
+#    https://google.com 으로 응답 메트릭 확인
+# 4. wget -q -O downloads/github_api.json https://api.github.com
+#    으로 GitHub API 응답 저장
+# 5. cat downloads/github_api.json | jq 'keys[]' 으로 최상위 키 목록 확인
+
+3. 헬스체크 스크립트 작성
+
+# /home/ubuntu/24.curl_wget/health_check.sh 작성
+
+#!/bin/bash
+# 서비스 헬스체크 스크립트
+
+ENDPOINTS=(
+    "https://google.com"
+    "https://api.github.com"
+    "https://api.ipify.org"
+)
+
+REPORT="/home/ubuntu/25.curl_wget/health_report.txt"
+echo "=== 헬스체크: $(date) ===" > $REPORT
+
+# [구현 1]
+# 각 엔드포인트에 대해 반복
+# curl -s -o /dev/null -w "%{http_code}" 로 상태 코드 확인
+# 200이면 "[OK]   URL", 아니면 "[FAIL] URL - 코드: N" 출력
+# 결과를 화면 + $REPORT 에 tee로 기록
+
+# [구현 2]
+# 응답 시간도 함께 측정하여 출력
+# curl -s -o /dev/null -w "%{http_code} %{time_total}" 활용
+
+# 실행
+# chmod +x health_check.sh && ./health_check.sh
+# cat health_report.txt

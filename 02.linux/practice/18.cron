@@ -1,0 +1,21 @@
+crontab -e      # 편집기 열기
+
+# 매일 새벽 2시 로그 정리
+# /scripts/log_cleanup.sh >> /logs/cleanup.log
+- 0 2 * * *
+
+# 5분마다 서비스 상태 확인
+# myapp
+- */5 * * * *
+
+# 매주 일요일 자정 백업
+# /scripts/backup.sh
+- 0 0 * * 0
+
+# 매월 1일 오전 9시 보고서 생성
+# /scripts/backup.sh
+- 0 9 1 * 0 
+
+# 부팅 시 앱 초기화
+# /scripts/init.sh >> /logs/init.log
+- @reboot

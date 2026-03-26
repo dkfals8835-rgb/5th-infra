@@ -1,0 +1,99 @@
+1) SSH
+ssh ubuntu@192.168.1.100                        # 기본 접속
+ssh -p 2222 ubuntu@127.0.0.1                   # 포트 지정
+ssh -i ~/.ssh/mykey ubuntu@server              # 키 파일 지정
+ssh ubuntu@server "ls -l /home/ubuntu"        # 원격 명령어 실행
+ssh ubuntu@server "tail -f /var/log/syslog"   # 원격 실시간 로그
+
+# 로컬 포트 포워딩 (로컬 8888 → 서버의 8080)
+ssh -L 8888:localhost:8080 ubuntu@server
+# → 브라우저에서 localhost:8888 접속 시 서버의 8080으로 연결
+
+# 원격 DB 접속 터널링
+ssh -N -L 3307:prod-db.internal:3306 ubuntu@jump-server
+# → localhost:3307 → jump-server 경유 → prod-db:3306
+
+2) ssh-keygen
+- SSH 키 페어 생성
+# ED25519 키 생성 (권장)
+ssh-keygen -t ed25519 -C "ubuntu@server"
+
+# RSA 4096 키 생성 (구형 호환)
+ssh-keygen -t rsa -b 4096 -C "ubuntu@server"
+
+# 생성 결과
+~/.ssh/id_ed25519        # 개인키 (절대 외부 유출 금지)
+~/.ssh/id_ed25519.pub    # 공개키 (서버에 등록)
+
+- 공개키 서버 등록
+# 수동 등록
+cat ~/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+
+# ssh-copy-id 사용 (비밀번호 인증 가능할 때)
+ssh-copy-id -i ~/.ssh/id_ed25519.pub ubuntu@server
+ssh-copy-id -i ~/.ssh/id_ed25519.pub -p 2222 ubuntu@server
+
+3) ~/.ssh/config
+
+```bash
+vim ~/.ssh/config
+
+# 기본 설정
+Host *
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+    ConnectTimeout 10
+
+# 운영 서버
+Host prod
+    HostName 192.168.1.100
+    User ubuntu
+    Port 22
+    IdentityFile ~/.ssh/prod_key
+
+# 개발 서버
+Host dev
+    HostName 192.168.1.200
+    User ubuntu
+    Port 2222
+    IdentityFile ~/.ssh/dev_key
+
+# VirtualBox 로컬 VM
+Host vm
+    HostName 127.0.0.1
+    User ubuntu
+    Port 2222
+    IdentityFile ~/.ssh/id_ed25519
+    StrictHostKeyChecking no
+```
+
+```bash
+chmod 600 ~/.ssh/config
+
+# 등록 후 단축 접속
+ssh prod           # ssh -i ~/.ssh/prod_key ubuntu@192.168.1.100 와 동일
+ssh dev            # ssh -p 2222 -i ~/.ssh/dev_key ubuntu@192.168.1.200 와 동일
+```
+
+4) scp
+# 로컬 → 서버
+scp app.jar ubuntu@server:/home/ubuntu/app/
+scp -r project/ ubuntu@server:/home/ubuntu/
+
+# 서버 → 로컬
+scp ubuntu@server:/var/log/app.log ./
+scp -r ubuntu@server:/home/ubuntu/backup/ ./
+
+# 포트 지정
+scp -P 2222 app.jar ubuntu@127.0.0.1:/home/ubuntu/
+
+# config 프로필 사용
+scp app.jar prod:/home/ubuntu/app/
+
+
+--- client -> ubuntu server
+--- 송신 : C:\CE\06.infra\02.linux\from-client.txt
+--- 수신 : /home/ubuntu/25.ssh
+--- client의 터미널(cmd)
+

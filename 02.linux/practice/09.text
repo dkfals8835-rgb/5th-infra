@@ -1,0 +1,132 @@
+# 현재 위치: /home/ubuntu/09.text
+
+# [분석 1] grep 활용
+# 1. ERROR 또는 WARN 포함 행 추출
+- grep -E "ERROR | WARN" app.log
+# 2. ERROR 행에서 HealthCheck는 제외하고 출력
+- grep "ERROR" app.log | grep -v "HealthCheck"
+# 3. NullPointerException 발생 행과 그 이후 2줄 함께 출력
+# 4. ERROR가 포함된 행 수 출력
+- grep -c "ERROR" app.log
+
+
+# 5. user_id가 숫자로 지정되어 있는 문장 출력
+- grep -E "user_id=[0-9]+" app.log
+
+#NullPointerException
+- grep "NullPointerException" app.log
+
+
+----- sed -----
+1) 치환
+- dev -> prod
+- sed 's/dev/prod/' application.yml
+
+# p 출력 : 1 ~ 5 줄만 출력
+- sed -n '1,5p' application.yml
+
+# p 출력 : redis 줄만 출력
+- sed -n '/redis/p' application.yml
+
+2) i 옵션
+
+-----------------------------
+# [분석 2] awk 활용
+# 5. 3번째 필드가 ERROR인 행에서 4번째 필드(서비스명)만 출력
+- awk '$3=="ERROR" {print $4}' app.log
+# 6. ERROR 발생 횟수 집계 후 "총 ERROR 수: N" 형태로 출력
+- awk '/ERROR/ { count++ } END { print "총 ERROR 수: " count }' app.log
+- 
+# 7. 서비스명($4)별 ERROR 빈도를 집계하여 출력
+#    (힌트: awk 배열 활용 — count[$4]++)
+# 7. 서비스명($4)별 ERROR 빈도를 집계하여 출력
+#    (힌트: awk 배열 활용 — count[$4]++)
+## 배열
+ubuntu@ubuntu:~/09.text$ cat data.csv 
+이름,부서,직급,연봉,입사연도
+김민준,개발팀,시니어,75000000,2019
+이서연,운영팀,주니어,42000000,2022
+박도윤,개발팀,리드,95000000,2017
+최아린,기획팀,시니어,68000000,2020
+정하준,개발팀,주니어,45000000,2023
+한소율,운영팀,시니어,71000000,2018
+윤지호,기획팀,리드,88000000,2016
+임나은,개발팀,시니어,80000000,2019
+송민재,운영팀,주니어,40000000,2024
+오예린,개발팀,리드,98000000,2015
+ubuntu@ubuntu:~/09.text$ awk -F, 'NR ==2 {for (i = 1; i <= NF; i++) print i"번째 필드:", $i}' data.csv
+1번째 필드: 김민준
+2번째 필드: 개발팀
+3번째 필드: 시니어
+4번째 필드: 75000000
+5번째 필드: 2019
+ubuntu@ubuntu:~/09.text$ awk -F, 'NR > 1 {count[$2]++} END {for (dept in count) print dept}' data.csv
+기획팀
+운영팀
+개발팀
+ubuntu@ubuntu:~/09.text$ awk -F, 'NR > 1 {count[$2]++} END {for (dept in count) print dept, count[dept]}' data.csv
+기획팀 2
+운영팀 3
+개발팀 5
+
+# ERROR가 포함된 행 출력
+- awk '$3=="ERROR" {print $0}' app.log
+
+# 3 필드값이 ERROR 행 출력
+- awk 'NR >=3 && NR <= 7 {print}' app.log
+# 3~7행 출력
+awk 'NR >=3 && NR <= 7 {print}' app.log
+
+
+# 현재 위치: /home/ubuntu/09.text/config
+
+# 1. 템플릿 파일에서 플레이스홀더(대문자_패턴) 포함 행만 grep으로 확인
+- grep -E "[A-Z_]+" application-template.yml
+- grep -E "[A-Z_]{2,}" application-template.yml
+# 2. sed로 dev 환경 값 치환하여 application-dev.yml 생성
+#    DB_HOST → dev-db.internal  /  DB_USER → dev_user
+#    DB_PASS → dev_pass123      /  REDIS_HOST → dev-redis.internal
+#    APP_PORT → 8080            /  LOG_LEVEL → DEBUG
+- sed -e 's/DB_HOST/dev-db.internal/g' \
+-e 's/DB_USER/dev_user/g' \
+-e 's/DB_PASS/dev_pass123/g' \
+-e 's/REDIS_HOST/dev_redis.internal/g' \
+-e 's/APP_PORT/8080/g'
+-e 's/LOG_LEVEL/DEBUG/g' application-template.yml
+
+# 3. sed로 prod 환경 값 치환하여 application-prod.yml 생성
+#    DB_HOST → prod-db.internal  /  DB_USER → prod_user
+#    DB_PASS → prod_pass!@#      /  REDIS_HOST → prod-redis.internal
+#    APP_PORT → 8080             /  LOG_LEVEL → WARN
+- sed -e 's/DB_HOST/prod-db.internal/g' \
+-e 's/DB_USER/prod_user/g' \
+-e 's/DB_PASS/prod_pass!@#/g' \
+-e 's/REDIS_HOST/prod-redis.internal/g' \
+-e 's/APP_PORT/8080/g'
+-e 's/LOG_LEVEL/WARN/g' application-template.yml > application-prod.yml
+
+
+# 4. 생성된 두 파일에서 password 행만 grep으로 확인
+- grep "password" application-dev.yml application-prod.yml
+
+# 5. prod 파일에서 LOG_LEVEL 행을 sed로 주석 처리 (#LOG_LEVEL)
+- sed -i 's/root: WARN/#root: WARN/g' application-prod.yml
+- grep 
+
+# 현재 위치: /home/ubuntu/09.text/logs
+
+# 1. grep으로 500번대 응답 코드 포함 행만 추출
+- grep -E "5[0-9]+" access.log
+# 2. awk로 IP 주소($1)별 요청 수 집계 출력
+- awk '{ count[$1]++ } END { for (ip in count) print ip, count[ip] }' access.log
+# 3. awk로 HTTP 상태코드($9)별 요청 수 집계 출력
+- awk '{ count[$8++] } END { for (http in count) print http, count[http] }' access.log
+# 4. awk로 전체 응답 바이트($10)의 합계 출력
+- awk '{sum += $9} END {print "바이트 총합 : ", sum}' access.log
+# 5. 200 응답만 grep으로 추출 후 awk로 요청 URL($7)만 출력
+- grep "200" access.log | awk '{print $6}'
+
+
+
+
+

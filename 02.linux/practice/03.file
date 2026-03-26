@@ -1,0 +1,64 @@
+mkdir 03.file
+cd /03.file
+tree
+cd ./03.file
+touch -d "yesterday" app.log
+touch -t 2010111200.30 app.log
+touch -t 202602201200.30 app.log
+
+ubuntu@ubuntu:~/03.file$ cp app.log app.log.bak
+ubuntu@ubuntu:~/03.file$ tree
+.
+├── app.log
+└── app.log.bak
+
+# 현재 위치: /home/ubuntu/03.file
+
+# 사전 준비
+# 주의 : 탭 들여쓰기 환경에서는 <<'EOF' 대신 <<-'EOF' 를 써야 정상 동작
+cat > app/config/application.yml << 'EOF'
+server:
+  port: 8080
+spring:
+  datasource:
+    url: jdbc:mysql://prod-db:3306/appdb
+EOF
+
+# 1. 배포 전 날짜 포함 백업
+#    app/config/application.yml → app/backup/application.yml.bak.$(date +%Y%m%d)
+
+# 2. 신규 설정 파일 생성
+cat > /tmp/application_new.yml << 'EOF'
+server:
+  port: 9090
+spring:
+  datasource:
+    url: jdbc:mysql://prod-db-v2:3306/appdb
+EOF
+
+# 3. 신규 파일을 app/config/application.yml 로 교체 (mv 사용)
+- mv /tmp/application_new.yml app/config/application.yml
+# 4. app/config/application.yml 내용 확인 (cat)
+- cat app/config/application.yml
+# 5. 롤백 — 백업 파일을 app/config/application.yml 로 복원 (cp -p 사용)
+- cp -p app/config/application.yml app/backup/application.yml.bak
+# 6. 복원된 파일 내용 확인
+- cat app/backup/application.yml.bak
+
+# 현재 위치: /home/ubuntu/03.file/app/logs/app
+
+# 1. ls -lt 로 파일 목록 수정 시간순 확인
+- ls -li 
+# 2. archive 디렉터리 생성
+- mkdir archive
+# 3. 30일 초과 .log 파일을 find로 검색하여 목록 확인
+- find . -name "*.log" -mtime +30
+# 4. 해당 파일들을 mv로 archive/ 로 이동
+- mv app-20240101.log archive
+- mv app-20240115.log archive
+# 5. archive/ 디렉터리 내용 확인
+- ls -li archive
+# 6. archive/ 디렉터리 전체 삭제 (rm -rf)
+- rm -rf archive
+# 7. 현재 디렉터리에 app.log만 남았는지 ls 로 확인
+- ls

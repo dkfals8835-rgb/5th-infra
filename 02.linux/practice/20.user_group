@@ -1,0 +1,39 @@
+1. 서비스 전용 계정 생성
+
+# 1. deploy 그룹 생성
+- sudo groupadd deploy
+# 2. 서비스 전용 시스템 계정 생성(serviceuser, deploy 그룹) (로그인 불가)
+- sudo useradd -r -s /bin/false -g deploy serviceuser
+# 3. id serviceuser 로 UID/GID 확인
+# 4. 배포 디렉터리(/home/ubuntu/20.user_group/app) 생성 후 소유자 변경
+# 시스템 계정은 홈 디렉터리 없음, 서비스 디렉터리 소유권 부여가 목적
+- sudo chown serviceuser:deploy /home/ubuntu/20.uesr_group/app
+# 5. ls -l /home/ubuntu/20.user_group/ 로 소유자 확인
+# 6. sudo userdel appuser 로 계정 삭제
+# 7. sudo groupdel deploy 로 그룹 삭제
+
+
+2. 개발자 계정 관리
+# 1. developer 그룹 생성
+- sudo groupadd developer
+# 2. dev01 계정 생성 (홈 디렉터리 포함, bash 셸)
+#    sudo useradd -m -s /bin/bash -G developer dev01
+# 3. dev01 패스워드 설정
+#    sudo passwd dev01
+# 4. id dev01 로 계정 정보 확인
+# 5. dev01을 sudo 그룹에 추가
+#    sudo usermod -aG sudo dev01
+# 6. id dev01 로 sudo 그룹 추가 확인
+# 7. dev01 계정 잠금 → passwd -l → 잠금 확인
+# 8. 계정 잠금 해제 → passwd -u
+# 9. sudo userdel -r dev01 로 계정 + 홈 디렉터리 삭제
+# 10. sudo groupdel developer
+
+3. 로그인 기록 및 사용자 현황 점검
+# 1. who 로 현재 로그인한 사용자 확인
+# 2. w 로 사용자 활동 내역 확인
+# 3. last | head -20 으로 최근 로그인 기록 확인
+# 4. last | grep ubuntu | head -10 으로 ubuntu 계정 로그인 이력
+# 5. sudo lastb | head -10 으로 실패한 로그인 시도 확인
+# 6. /etc/passwd에서 bash 셸 사용 계정 목록
+# 7. /etc/group에서 sudo 그룹 멤버 확인

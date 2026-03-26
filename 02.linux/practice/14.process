@@ -1,0 +1,34 @@
+1) Spring Boot 프로세스 확인 및 관리
+# 1. ps aux 로 전체 프로세스 확인
+# 2. ps aux | grep sleep 으로 sleep 프로세스만 필터
+# 3. ps aux --sort=-%cpu | head -5 로 CPU 상위 5개 확인
+# 4. sleep 프로세스 중 하나의 PID 확인 후 kill -15 로 정상 종료
+# 5. kill -9 로 다른 sleep 프로세스 강제 종료
+# 6. pkill -f "sleep 500" 으로 패턴 매칭 종료
+# 7. ps aux | grep sleep 으로 모두 종료됐는지 확인
+
+2) 백그라운드 작업 관리
+# 1. sleep 200 실행 → Ctrl+Z 로 일시 중지
+# 2. jobs 로 작업 목록 확인
+# 3. bg %1 로 백그라운드 재개
+# 4. jobs 로 상태 변화 확인
+# 5. fg %1 로 포그라운드로 전환 → Ctrl+C 로 종료
+# 6. nohup sleep 1000 > sleep.log 2>&1 & 로 백그라운드 실행
+# 7. echo $! 로 PID 확인 → app.pid 파일로 저장
+# 8. kill $(cat app.pid) 로 종료
+
+3) 프로세스 트리 및 자원 사용 분석
+# 1. ps -ef --forest 로 프로세스 트리 확인
+# 2. 메모리 사용 상위 10개
+- ps aux --sort=%mem | head -10
+# 3. PID 1(systemd) 정보 확인
+- ps -p 1
+# 4. 전체 메모리 사용률 합산
+- ps aux | awk 'NR > 1 {sum += $4} END {print "전체 메모리 사용률 : ", sum "%"}'
+
+# 5. 전체 프로세스 수 확인
+- ps aux | wc -l
+
+# 6. 메모리를 가장 많이 사용하는 프로세스를 1개만 출력
+# USER, PID, MEN, COMMAND
+- ps aux --sort=-%mem | awk 'NR == 2 {print $1, $2, $4, $11}'

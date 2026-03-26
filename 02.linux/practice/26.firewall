@@ -1,0 +1,27 @@
+1) ufw
+# 상태 확인
+sudo ufw status                         # 활성화 여부 + 규칙 목록
+sudo ufw status verbose                 # 상세 출력
+sudo ufw status numbered                # 규칙 번호 포함
+
+# 활성화 / 비활성화
+sudo ufw enable                         # 방화벽 활성화
+sudo ufw disable                        # 방화벽 비활성화
+sudo ufw reset                          # 전체 규칙 초기화
+
+# 예시
+# 허용
+sudo ufw allow 22                       # 22번 포트 허용 (TCP+UDP)
+sudo ufw allow 22/tcp                   # 22번 TCP만 허용
+sudo ufw allow ssh                      # 서비스명으로 허용
+sudo ufw allow 8080/tcp                 # Spring Boot 포트
+sudo ufw allow from 192.168.1.0/24     # 특정 IP 대역 허용
+sudo ufw allow from 192.168.1.100 to any port 22  # 특정 IP의 22번 허용
+
+# 차단
+sudo ufw deny 80/tcp                    # 80 차단
+sudo ufw deny from 10.0.0.5            # 특정 IP 전체 차단
+
+# 삭제
+sudo ufw delete allow 8080/tcp          # 규칙 삭제
+sudo ufw delete 3                       # 번호로 삭제 (status numbered 확인 후)

@@ -1,0 +1,69 @@
+# 호스트 -> 컨테이너
+ubuntu@ubuntu:~/docker/03.container$ docker exec web bash -c 'ls /tmp'
+ubuntu@ubuntu:~/docker/03.container$ touch from-host.txt
+ubuntu@ubuntu:~/docker/03.container$ ls
+from-host.txt
+ubuntu@ubuntu:~/docker/03.container$ docker ps
+CONTAINER ID   IMAGE     COMMAND                  CREATED          STATUS          PORTS     NAMES
+d937734556ee   nginx     "/docker-entrypoint.…"   27 minutes ago   Up 27 minutes   80/tcp    web
+ubuntu@ubuntu:~/docker/03.container$ docker cp ./from-host.txt web:/tmp/from-host.txt
+Successfully copied 1.54kB to web:/tmp/from-host.txt
+ubuntu@ubuntu:~/docker/03.container$ docker exec web bash -c 'ls /tmp'
+from-host.txt
+
+# 컨테이너 -> 호스트
+ubuntu@ubuntu:~/docker/03.container$ docker exec web bash -c 'touch /tmp/from-container.txt'
+ubuntu@ubuntu:~/docker/03.container$ docker exec web bash -c 'ls /tmp'
+from-container.txt
+from-host.txt
+ubuntu@ubuntu:~/docker/03.container$ docker cp web:/tmp/from-container.txt ./from-container.txt
+Successfully copied 1.54kB to /home/ubuntu/docker/03.container/from-container.txt
+ubuntu@ubuntu:~/docker/03.container$ ls
+from-container.txt  from-host.txt
+
+1. 컨테이너 기본 조작
+# 현재 위치: /home/ubuntu/docker/03.container
+
+# 1. nginx 컨테이너를 이름 webserver, 포트 8080:80, 백그라운드로 실행
+# 2. docker ps 로 실행 상태 확인
+# 3. docker port webserver 로 포트 매핑 확인
+# 4. docker exec webserver ls /usr/share/nginx/html 로 내부 파일 확인
+# 5. docker exec -it webserver bash 로 내부 접속 → ls, pwd, exit
+# 6. docker logs webserver 로 접근 로그 확인
+# 7. docker stop webserver → docker ps -a 로 상태 확인
+# 8. docker start webserver → docker ps 로 재시작 확인
+# 9. docker rm -f webserver 로 강제 삭제
+
+2. 컨테이너 파일 복사 실습
+# 현재 위치: /home/ubuntu/docker/03.container
+
+# 1. nginx 컨테이너 실행 (이름: nginx-cp, 포트 8888:80)
+- docker run -d --name nginx-cp -p 8888:80 nginx
+# 2. 기본 index.html 내용 확인
+#    docker exec nginx-cp cat /usr/share/nginx/html/index.html
+# 3. 위에서 만든 index.html 을 컨테이너에 복사
+#    docker cp index.html nginx-cp:/usr/share/nginx/html/index.html
+# 4. 교체 후 내용 확인 (docker exec 또는 curl localhost:8081)
+# 5. 컨테이너 내부에서 파일 생성 후 호스트로 복사
+#    docker exec nginx-cp sh -c "echo 'container file' > /tmp/from_container.txt"
+#    docker cp nginx-cp:/tmp/from_container.txt .
+#    cat from_container.txt
+
+3. 컨테이너 환경변수 및 재시작 정책
+# 현재 위치: /home/ubuntu/docker/03.container
+
+# 1. MySQL 컨테이너 실행
+docker run --name mysql-test \
+  -e MYSQL_ROOT_PASSWORD=root \
+  -e MYSQL_DATABASE=testdb \
+  -e MYSQL_USER=testuser \
+  -e MYSQL_PASSWORD=testpass \
+  --restart unless-stopped \
+  -p 3306:3306 \
+  -d mysql:8.0
+
+# 2. docker ps 로 실행 확인
+# 3. docker logs -f mysql-test 로 기동 로그 확인 (ready for connections 메시지 확인)
+# 4. docker exec -it mysql-test mysql -u root -proot -e "show databases;"
+# 5. docker container inspect mysql-test | grep -A3 "RestartPolicy"
+# 6. docker stop mysql-test && docker rm mysql-test 로 정리

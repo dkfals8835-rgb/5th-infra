@@ -1,0 +1,87 @@
+mkdir -p find_test/{java_src,logs,config}
+touch find_test/java_src/Main.java
+touch find_test/java_src/Service.java
+touch find_test/logs/app.log
+touch find_test/logs/error.log
+touch find_test/config/application.yml
+touch -d "40 days ago" find_test/logs/old.log
+chmod 777 find_test/java_src/Main.java
+
+- .yml 검색 ?
+find find_test/ -name "*.yml"
+- .JAVA 검색 ?
+find find_test/ -iname "*.JAVA"
+- .log 파일 검색 ?
+find find_test/ -name "*.log" type f
+
+- 30일 이전에 수정된 파일?
+find find_test/ -mtime +30
+- 정확히 1일 이전에 수정된 파일?
+find find_test / -mtime +1
+- 7일 이상 접근하지 않은 파일?
+find find_test / -ctime +7
+
+- .java 제외하고 나머지 파일들?
+find find_test/ -not -name "*.java"
+- .log 또는 .yml 파일?
+find find_test/ -name "*.log" -o -name "*.yaml"
+
+- *.log 파일 검색 -> cat 출력
+find find_test/ -name "*.log" -exec cat {} \;
+
+- *.log 파일 검색 -> 30일 이전에 수정된 파일 -> 삭제 ?
+find find_test/ -name "*.log" -mtime +30 -exec rm {} +
+find find_test/ -name "*.log" -mtime +30 -delete
+
+# 현재 위치: /home/ubuntu/04.find
+
+# [검증 1] 전체 구조 파악
+# 1. project 디렉터리 하위의 모든 .yml 파일 검색
+- find project/ -name "*.yml"
+
+# [검증 2] 민감 파일 확인
+# 2. project 하위에서 파일명에 dev가 포함된 파일 검색
+- find project/ -name "*dev*" 
+
+# [검증 3] 정리 대상 파악
+# 3. 전체 경로에서 수정한 지 30일 초과된 .bak 파일 검색
+- find . -name "*.bak" -mtime +30 
+
+# 4. tmp 디렉터리에서 빈 디렉터리 검색
+- find tmp -empty
+
+# [검증 4] 내용 확인
+# 5. project/config 에서 .yml 파일 검색 후 각 파일 내용 출력 (-exec cat 사용)
+- find project/config -name "*.yml" -exec cat {} \;
+
+# [검증 5] 정리 실행
+# 6. tmp 디렉터리에서 .tmp 파일 검색 후 삭제 (-delete 사용)
+- find tmp -name "*.tmp" -delete / find tmp -name "*.tmp" -exec rm
+
+
+# 현재 위치: /home/ubuntu/04.find/logs
+# 1. logs 디렉터리에서 7일 이내 수정된 .log 파일 검색
+- find -name "*.log" -mtime +7
+# 2. logs 디렉터리에서 30일 초과된 .log 파일 검색
+- find -name "*.log" -atime +30
+# 3. 100KB 이상인 .log 파일 검색
+- find -name "*.log" -size +100k
+# 4. 최신 app.log 파일을 less로 열어 ERROR 키워드 검색 (/ 검색 활용)
+- less app.log /ERROR
+# 5. 30일 초과 .log 파일을 한 번에 검색하여 목록 확인 후 삭제
+- find . -name "*.log" -mtime +30 -exec rm {} +
+
+
+# 현재 위치: /home/ubuntu/04.find
+# 1. 전체 하위에서 권한이 정확히 777인 파일 검색
+- find . -perm 777 -type f
+# 2. 전체 하위에서 심볼릭 링크 파일 검색
+- find . -type l
+# 3. project 하위에서 .sh 파일 검색
+- find project/ -name "*.sh" -type f
+# 4. project 하위에서 .sh 파일 검색 후 각 파일의 권한을 ls -l 로 확인 (-exec ls -l 사용)
+- find project/ -name "*.sh" -exec ls -l {} \;
+# 5. project 하위에서 최근 1일 이내 수정된 파일 검색
+- find project/ -mtime -1 -type f
+
+

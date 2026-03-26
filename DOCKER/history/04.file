@@ -1,0 +1,150 @@
+*** Dockerfile ***
+- Docker 이미지를 생성하기 위한 명령어 스크립트 파일
+
+# 빌드 흐름
+Dockerfile
+    │
+    │  docker build -t <이미지명>:<태그> .
+    ▼
+[Layer 1] FROM ubuntu:22.04
+[Layer 2] RUN apt-get update ...
+[Layer 3] COPY app.jar /app.jar
+[Layer 4] ENTRYPOINT ["java", "-jar", "/app.jar"]
+    │
+    ▼
+Docker Image (Read-Only)
+    │
+    │  docker run
+    ▼
+Container (이미지 + 쓰기 레이어)
+
+
+
+1) 핵심 명령어
+# FROM — 베이스 이미지 지정 (항상 첫 줄)
+FROM ubuntu:22.04
+FROM openjdk:17-jdk-slim
+FROM nginx:alpine
+
+# RUN — 이미지 빌드 시 실행할 명령어 (새 레이어 생성)
+RUN apt-get update && \
+    apt-get install -y curl git && \
+    rm -rf /var/lib/apt/lists/*
+
+# COPY — 호스트 파일 → 이미지로 복사
+COPY index.html /usr/share/nginx/html/index.html
+COPY ./target/app.jar /app.jar
+
+# ADD — COPY + URL 다운로드, tar 자동 압축해제 가능
+ADD https://example.com/file.tar.gz /tmp/
+
+# WORKDIR — 이후 명령어의 작업 디렉터리 지정 (없으면 자동 생성)
+WORKDIR /app
+
+# ENV — 환경변수 설정 (이미지 빌드 + 컨테이너 실행 시 모두 유효)
+ENV JAVA_OPTS="-Xmx512m"
+ENV APP_PORT=8080
+
+# EXPOSE — 컨테이너가 사용할 포트 명시 (실제 포트 오픈은 docker run -p 로)
+EXPOSE 8080
+
+# CMD — 컨테이너 시작 시 기본 실행 명령어 (docker run 인자로 덮어쓰기 가능)
+CMD ["nginx", "-g", "daemon off;"]
+
+# ENTRYPOINT — 컨테이너 시작 시 고정 실행 명령어 (덮어쓰기 불가)
+ENTRYPOINT ["java", "-jar", "/app.jar"]
+
+# ARG — 빌드 시에만 사용되는 변수 (docker build --build-arg 로 전달)
+ARG APP_VERSION=1.0.0
+
+# VOLUME — 마운트 포인트 지정
+VOLUME ["/var/log/app"]
+
+# USER — 명령어 실행 사용자 변경 (보안상 root 대신 일반 유저 사용)
+USER appuser
+
+
+# 조합 예시
+ENTRYPOINT ["java", "-jar", "/app.jar"]
+CMD ["--spring.profiles.active=prod"]
+# → java -jar /app.jar --spring.profiles.active=prod
+
+# docker run 시 인자 전달
+# docker run myapp --spring.profiles.active=dev
+# → java -jar /app.jar --spring.profiles.active=dev
+
+2) run 레이어 최적화
+# 나쁜 예 — 레이어 3개 생성, 캐시 파일 남음
+RUN apt-get update
+RUN apt-get install -y curl
+RUN apt-get install -y git
+
+# 좋은 예 — 레이어 1개, 캐시 파일 정리
+RUN apt-get update && \
+    apt-get install -y curl git && \
+    rm -rf /var/lib/apt/lists/*
+
+3).dockerignore (=.gitignore)
+# .dockerignore 예시 (Spring Boot 프로젝트)
+
+# 빌드 결과물 — 멀티스테이지 빌드 시 컨테이너 내부에서 생성하므로 불필요
+target/
+build/
+
+# Git 관련
+.git/
+.gitignore
+
+# IDE 설정
+.idea/
+*.iml
+.vscode/
+
+# 환경 파일 — 이미지에 포함되면 보안 위험
+.env
+*.env.local
+application-prod.yml
+application-secret.yml
+
+# 로그 / 임시 파일
+*.log
+tmp/
+
+# Docker 관련 (빌드 컨텍스트 자체)
+Dockerfile*
+docker-compose*.yml
+
+4)docker build
+# 기본 빌드
+docker build -t <이미지명>:<태그> <Dockerfile경로>
+
+# 현재 디렉터리의 Dockerfile로 빌드
+docker build -t myapp:1.0 .
+
+# 태그 없으면 latest 자동 부여
+docker build -t myapp .
+
+# 빌드 인자 전달
+docker build --build-arg APP_VERSION=2.0 -t myapp:2.0 .
+
+# 캐시 사용 안 함 (완전 새로 빌드)
+docker build --no-cache -t myapp:1.0 .
+
+# 멀티플랫폼 빌드 (ARM/AMD64 모두 지원)
+docker buildx build --platform=linux/amd64,linux/arm64 -t myapp:1.0 .
+
+5)dockerhub 이미지 push/pull
+# Docker Hub 로그인
+docker login
+
+# 이미지에 Hub 태그 추가
+docker tag <로컬이미지명> <DockerHub_ID>/<Repository명>:<태그>
+docker tag myapp:1.0 myid/myrepo:1.0
+
+# 이미지 Push
+docker push <DockerHub_ID>/<Repository명>:<태그>
+docker push myid/myrepo:1.0
+
+# 이미지 Pull
+docker pull <DockerHub_ID>/<Repository명>:<태그>
+

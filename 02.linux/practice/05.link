@@ -1,0 +1,114 @@
+# 링크 생성
+****심볼릭 링크****
+1) 파일
+app-config-link.yml : application.yml을 참조 
+- ln -s /home/ubuntu/05.link/app/config/application.yml app-config-link.yml
+
+# 링크의 inode : 394125
+394125 lrwxrwxrwx 1 ubuntu ubuntu   47 Mar 17 10:39 app-config-link.yml -> /home/ubuntu/05.link/app/config/application.yml
+
+# 원본의 inode : 394120
+394120 -rw-rw-r-- 1 ubuntu ubuntu 84 Mar 17 10:35 application.yml
+
+2) 디렉터리
+# current -> releases/v2.0.0을 참조
+ln -s /home/ubuntu/05.link/releases/v2.0.0/ current
+
+--------------------------------------------------------------------------
+****하드 링크****
+mkdir -p backup
+backup/application.yml -> app/config/application.yml
+
+링크의 inode와 원본의 inode가 같음. (ls -il)
+394120 -rw-rw-r-- 2 ubuntu ubuntu 84 Mar 17 10:35 app/config/application.yml
+
+394120 -rw-rw-r-- 2 ubuntu ubuntu 84 Mar 17 10:35 backup/application.yml.hard
+
+# 링크 버전 교체
+- ln -sfn /home/ubuntu/05.link/releases/v2.1.0 current
+
+
+# 현재 위치: /home/ubuntu/05.link
+
+# [배포 1] 초기 배포
+# 1. releases/v1.0.0 을 가리키는 심볼릭 링크 current 생성
+# 2. ls -l 로 링크 확인
+# 3. readlink -f 로 current 의 실제 절대 경로 확인
+# 4. current/config/application.yml 내용 cat 으로 확인
+
+
+# [배포 2] 신규 버전 전환
+# 5. current 링크를 releases/v2.1.0 으로 교체 (ln -sfn 사용)
+- ln -sfn /home/ubuntu/05.link/realease/v2.1.0 current
+# 6. readlink -f current 로 버전 전환 확인
+# 7. current/config/application.yml 내용 확인
+
+# [배포 3] 롤백
+# 8. 장애 발생 — current 를 releases/v2.0.0 으로 롤백
+- ln -sfn releases/v2.0.0 current
+# 9. 현재 current 가 어떤 버전을 가리키는지 확인
+- readlink -f current
+
+
+# 현재 위치: /home/ubuntu/05.link/config
+# 1. find 로 services 하위 심볼릭 링크 전체 검색
+- find services/ -type l
+# 2. ls -l services/user-service/ 로 링크 상태 확인
+# 3. readlink -f services/post-service/datasource.yml 로 실제 경로 확인
+# 4. find 로 깨진 심볼릭 링크 탐지
+- find -xtype l
+# 5. 정상 링크를 통해 공통 설정 파일 내용 cat 으로 확인
+- 
+
+# 현재 위치: /home/ubuntu/05.link
+# 1. app/config/application.yml 의 하드 링크를 backup/config/application.yml 로 생성
+- ln app/config/application.yml backup/config/application.yml
+# 2. ls -l 로 두 파일의 링크 카운트(2) 확인
+- ls -l
+# 3. find . -type f -links +1 로 하드 링크가 걸린 파일 검색
+
+# 4. 원본(app/config/application.yml) 삭제
+
+# 5. backup/config/application.yml 내용이 유지되는지 cat 으로 확인 (하드 링크 특성 검증)
+
+# 6. ls -l backup/config/application.yml 로 링크 카운트가 1로 줄었는지 확인
+
+--------------
+추가 : 원본 컨텐츠를 변경하면 하드 링크의 내용들도 동기화
+추가 : 원본 컨텐츠를 변경하면 하드링크의 내용들 동기화 확인
+ubuntu@ubuntu:~/05.link$ find . -type f -links +1
+./backup/config/application.yml
+./backup/application.yml.hard
+ubuntu@ubuntu:~/05.link$ cat backup/application.yml.hard 
+spring:
+  datasource:
+    url: jdbc:mysql://prod-db.internal:3306/appdb
+    username: prod_user
+    password: prod_pass!@#
+server:
+  port: 8080
+ubuntu@ubuntu:~/05.link$ cat backup/config/application.yml 
+spring:
+  datasource:
+    url: jdbc:mysql://prod-db.internal:3306/appdb
+    username: prod_user
+    password: prod_pass!@#
+server:
+  port: 8080
+ubuntu@ubuntu:~/05.link$ vi backup/config/application.yml 
+ubuntu@ubuntu:~/05.link$ cat backup/config/application.yml 
+spring:
+  datasource:
+    url: jdbc:mysql://prod-db.internal:3306/appdb
+    username: prod_user
+    password: prod_pass!@#$
+server:
+  port: 8080
+ubuntu@ubuntu:~/05.link$ cat backup/application.yml.hard 
+spring:
+  datasource:
+    url: jdbc:mysql://prod-db.internal:3306/appdb
+    username: prod_user
+    password: prod_pass!@#$
+server:
+  port: 8080

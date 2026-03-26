@@ -1,0 +1,42 @@
+권한 기본 실습
+ubuntu@ubuntu:~/07.permission$ umask
+0               /     002
+특수 권한 비트   /    일반 권한
+
+1) 특수 권한 비트
+- setuid(4) : 파일 적용, 실행 시 소유자의 권한으로 실행
+- setuid(2) : 파일/디렉토리 적용, 실행 시 그룹의 권한으로 실행
+- sticky bit(1) : 디렉토리 적용, 본인 파일만 삭제
+
+
+# 현재 위치: /home/ubuntu/07.permission
+
+# 1. ls -l app/deploy/ 로 현재 권한 확인
+# 2. deploy.sh, rollback.sh 에 실행 권한 추가 (chmod +x)
+- chmod +x deploy.sh rollback.sh
+# 3. application-prod.yml 을 소유자만 읽기/쓰기 가능하게 (600)
+- chmod 600 application-prod.yml
+# 4. app/logs/ 하위 전체를 그룹 읽기 가능하게 재귀 적용 (664)
+- chmod -R 664 app/logs/
+# 5. ls -l 로 각 파일 권한 최종 확인
+
+
+# 현재 위치: /home/ubuntu/07.permission
+
+# 1. app/ 디렉터리 전체 소유자를 appuser 로 재귀 변경
+- chown -R appuser app/
+# 2. ls -l app/ 로 소유자 변경 확인
+# 3. app/config/ 소유자를 다시 ubuntu 로 재귀 변경 (설정 파일은 관리자가 수정)
+- chown -R ubuntu app/config/
+# 4. ls -l app/config/ 로 확인
+
+# 현재 위치: /home/ubuntu/07.permission
+
+# 1. find로 권한이 정확히 777인 파일 검색
+- find . -type f -perm 777
+# 2. secret.key → 600 으로 변경
+- chmod 600 app/config/secret.key
+# 3. old_deploy.sh → 755 로 변경
+- chmod 755 app/deploy/old_deploy.sh
+# 4. find로 777 파일이 없어졌는지 재확인
+# 5. umask 확인 후, 새 파일 touch test.txt 생성 → ls -l 로 기본 권한 확인

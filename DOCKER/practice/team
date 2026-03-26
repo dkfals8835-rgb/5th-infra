@@ -1,0 +1,36 @@
+# 회고 팀별 실습
+1. 작업 영역 및 index.html 생성
+- cd /home/ubuntu/build_test/nginx
+- vi index.html
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <h1>Welcome Nginx : build test by BSM</h1>
+</body>
+
+</html>
+
+2. DockerFile 작성
+FROM nginx:latest
+COPY index.html /usr/share/nginx/html/index.html
+
+3. 이미지 빌드
+docker build -t 본인DockerHub아이디/nginx-custom:1.0 .
+
+4. DockerHub push
+docker login
+docker push 본인DockerHub아이디/nginx-custom:1.0
+
+5. 다른 팀원 이미지 pull 및 확인
+- docker pull 다른팀원dockerhub아이디/nginx-custom:1.0
+- docker run -d -p 8080:80 팀원DockerHub아이디/nginx-custom:1.0
+
+curl localhost:8080

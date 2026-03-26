@@ -1,0 +1,148 @@
+  # 조건(if문)
+  1 #!/bin/bash
+  2 
+  3 FILE="/etc/hostname"
+  4 INPUT=$1
+  5 
+  6 # 파일 존재 확인
+  7 if [ -f "$FILE" ]; then
+  8     echo "[OK] $FILE 파일 존재"
+  9 else
+ 10     echo "[FAIL] $FILE 파일 없음"
+ 11 
+ 12 fi
+ 13 
+ 14 # 인자 비어있는지 확인
+ 15 if [ -z "$INPUT" ]; then
+ 16 echo "인자 입력 필요"
+ 17 exit 1
+ 18 fi
+ 19 
+ 20 # 숫자 비교
+ 21 # 0 : 사용 X
+ 22 # 1 ~ 1023 : 시스템/루트 전용
+ 23 # 1024 ~ 49151 : 일반 애플리케이션
+ 24 # 49152 ~ 65535 : 임시/클라이언트
+ 25 PORT=$INPUT
+ 26 if [ "$PORT" -ge 1024 ] && [ "$PORT" -le 65535 ]; then 
+ 27     echo "유효 포트 번호 : $PORT"
+ 28 else
+ 29     echo "잘못된 포트 번호 : $PORT"
+ 30 fi
+
+--> 조건을 하나로 묶어서 실행을 원할 시 : [[]]
+
+# 반복문
+  1 #!/bin/bash
+  2 
+  3 # 환경 목록 순회
+  4 ENVS=("dev" "prod")
+  5 for ENV in "${ENVS[@]}"; do
+  6     echo "환경 : $ENV"
+  7 done
+  8 
+  9 # 범위 반복 (재시도 로직 시뮬레이션)
+ 10 echo "---재시도---"
+ 11 
+ 12 for i in {1..3}; do
+ 13     echo "시도 $i / 3"
+ 14     sleep 1
+ 15 done
+ 16 
+ 17 # 파일 목록 순회 : /etc/*.conf 파일 목록
+ 18 COUNT=0
+ 19 for FILE in /etc/*.conf; do
+ 20     echo " $FILE "
+ 21     ((COUNT++))
+ 22 done
+ 23 echo "총 $COUNT 개"
+ 24 
+ 25 # while 카운트다운
+ 26 # 3 -> 1 카운트다운 ?
+ 27 N=3
+ 28 while [ $N -gt 0 ]; do
+ 29     echo "카운트: $N..."
+ 30     ((N--))
+ 31 done
+
+# 함수 사용
+ 1 #!/bin/bash
+  2 
+  3 function print_banner() {
+  4     local TITLE=$1
+  5     echo "=============================="
+  6     echo "  $TITLE"
+  7     echo "=============================="
+  8 }
+  9 
+ 10 function is_port_open() {
+ 11     local HOST=$1
+ 12     local PORT=$2
+ 13     # timeout 1: 1초 안에 응답 없으면 실패
+ 14     if timeout 1 bash -c "echo > /dev/tcp/$HOST/$PORT" 2>/dev/null; then
+ 15         echo "[OPEN] $HOST:$PORT"
+ 16         return o
+ 17     else
+ 18         echo "[CLOSE] $HOST:$PORT"
+ 19         return 1
+ 20     fi
+ 21 }
+ 22 
+ 23 function get_disk_usage() {
+ 24     local DIR=${1:-"/"}          # 기본값: /
+ 25     local USAGE
+ 26 
+ 27     # / 사용률 : ? 출력
+ 28     USAGE=$(df -h "$DIR" | awk 'NR==2 {print $5}')
+ 29     echo "$DIR 사용률 : $USAGE"
+ 30 }
+ 31 
+ 32 # 함수 호출
+ 33 print_banner "서버 점검 시작"
+ 34 is_port_open "localhost" "22"
+ 35 is_port_open "localhost" "9999"
+ 36 get_disk_usage "/"
+ 37 get_disk_usage "/home"
+
+
+ 1. 시나리오: 배포 자동화 스크립트
+ #!/bin/bash
+set -euo pipefail
+
+# 변수 설정
+APP_NAME="myapp"
+VERSION=$1                          # 인자로 버전 받기
+DEPLOY_DIR="/home/ubuntu/28.script/releases"
+LOG_FILE="/home/ubuntu/28.script/deploy.log"
+
+# [구현 1] 인자 검증
+# VERSION이 비어있으면 "Usage: ./deploy.sh <version>" 출력 후 exit 1
+
+# [구현 2] 배포 디렉터리 생성
+# $DEPLOY_DIR/$VERSION 디렉터리 없으면 생성
+if [ -z "$VERSION"]; then
+     echo "Usage: ./deploy.sh <version>"
+fi
+
+# [구현 3] 배포 시뮬레이션
+# "[$APP_NAME] 배포 시작: v$VERSION" 출력
+# "배포 파일 복사 중..." 출력 후 sleep 1
+# "서비스 재시작 중..." 출력 후 sleep 1
+# "배포 완료: $(date)" 출력
+{
+echo "[$APP_NAME] 배포 시작 : v$VERSION"
+echo "배포 파일 복사 중..."
+sleep 1
+echo "서비스 재시작 중..."
+sleep 1
+echo "배포 완료: $(date)"
+} | tee -a "$LOG_FILE"
+
+# [구현 4] 로그 기록
+# 위 메시지를 $LOG_FILE 에도 >> 로 기록
+
+# [구현 5] 실행 권한 부여 후 테스트
+# chmod +x deploy.sh
+# ./deploy.sh 1.0.0
+# ./deploy.sh 2.0.0
+# cat deploy.log 로 로그 확인
